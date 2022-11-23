@@ -1,9 +1,11 @@
 package com.codepath.debuggingchallenges.activities;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.codepath.asynchttpclient.AsyncHttpClient;
@@ -14,6 +16,7 @@ import com.codepath.debuggingchallenges.models.Movie;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -21,11 +24,13 @@ import okhttp3.Headers;
 
 public class MoviesActivity extends AppCompatActivity {
 
-    private static final String API_KEY = "a07e22bc18f5cb106bfe4cc1f83ad8ed";
+    public static final String TAG = "MoviesActivity";
+    private static final String url = "https://api.themoviedb.org/3/movie/now_playing?api_key=a07e22bc18f5cb106bfe4cc1f83ad8ed";
 
     RecyclerView rvMovies;
     MoviesAdapter adapter;
     ArrayList<Movie> movies;
+    AsyncHttpClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,33 +38,47 @@ public class MoviesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_movies);
         rvMovies = findViewById(R.id.rvMovies);
 
+        movies = new ArrayList<>();
+
         // Create the adapter to convert the array to views
-        MoviesAdapter adapter = new MoviesAdapter(movies);
+        adapter = new MoviesAdapter(this, movies);
+
+        client = new AsyncHttpClient();
 
         // Attach the adapter to a ListView
         rvMovies.setAdapter(adapter);
+
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        // RecyclerView setup, layout manager and adapter
+        rvMovies.setLayoutManager(layoutManager);
+
+
 
         fetchMovies();
     }
 
 
     private void fetchMovies() {
-        String url = " https://api.themoviedb.org/3/movie/now_playing?api_key=";
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.get(url, null, new JsonHttpResponseHandler() {
+        client.get(url, new JsonHttpResponseHandler() {
             @Override
-            public void onSuccess(int statusCode, Headers headers, JSON response) {
+            public void onSuccess(int i, Headers headers, JSON json) {
+                Log.e(TAG, "onSuccess");
+                JSONObject jsonObject = json.jsonObject;
+
                 try {
-                    JSONArray moviesJson = response.jsonObject.getJSONArray("results");
-                    movies = Movie.fromJSONArray(moviesJson);
+                    JSONArray result = jsonObject.getJSONArray("results");
+                    Log.i(TAG, "Result: " + result.toString());
+                    movies.addAll(Movie.fromJSONArray(result));
+                    adapter.notifyDataSetChanged();
                 } catch (JSONException e) {
-                    e.printStackTrace();
+                    Log.i(TAG, "Hit JSONException: " + e);
                 }
             }
 
             @Override
-            public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
-                Log.e(MoviesActivity.class.getSimpleName(), "Error retrieving movies: ", throwable);
+            public void onFailure(int i, Headers headers, String s, Throwable throwable) {
+                Log.e(TAG, "onFailure");
+
             }
         });
     }

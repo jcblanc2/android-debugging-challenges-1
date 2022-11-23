@@ -5,6 +5,8 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,8 +22,40 @@ import java.util.List;
 public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.ViewHolder> {
 
     private List<Movie> movies;
+    private Context context;
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+
+    public MoviesAdapter(Context context1,List<Movie> movies) {
+        this.context = context1;
+        this.movies = movies;
+    }
+
+    @Override
+    public int getItemCount() {
+        return movies.size();
+    }
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+
+        // Inflate the custom layout
+        View view = LayoutInflater.from(context).inflate(R.layout.item_movie, parent, false);
+        // Return a new holder instance
+        return new ViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(MoviesAdapter.ViewHolder viewHolder, int position) {
+
+        Movie movie = movies.get(position);
+
+        viewHolder.bind(movie, viewHolder);
+    }
+
+
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         // only needed because we need to set the background color
         View view;
 
@@ -38,51 +72,24 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.ViewHolder
             tvRating = itemView.findViewById(R.id.tvRating);
             ivPoster = itemView.findViewById(R.id.ivPoster);
         }
-    }
 
-    public MoviesAdapter(List<Movie> movies) {
-        this.movies = movies;
-    }
+        public void bind(Movie movie, ViewHolder viewHolder) {
+            // Populate the data into the template view using the data object
+            tvName.setText(movie.getTitle());
 
-    @Override
-    public int getItemCount() {
-        return 0;
-    }
+            Resources resources = tvName.getResources();
+            double movieRating = movie.getRating();
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        Context context = parent.getContext();
-        LayoutInflater inflater = LayoutInflater.from(context);
+            if (movieRating > 6) {
+                view.setBackgroundColor(Color.GREEN);
+            }
 
-        // Inflate the custom layout
-        View movieView = inflater.inflate(R.layout.item_movie, parent, false);
+            String ratingText = String.format(resources.getString(R.string.rating), movieRating);
+            tvRating.setText(ratingText);
 
-        // Return a new holder instance
-        ViewHolder viewHolder = new ViewHolder(movieView);
-        return viewHolder;
-    }
-
-    @Override
-    public void onBindViewHolder(MoviesAdapter.ViewHolder viewHolder, int position) {
-
-        Movie movie = movies.get(position);
-
-        // Populate the data into the template view using the data object
-        viewHolder.tvName.setText(movie.getTitle());
-
-        Resources resources = viewHolder.tvName.getResources();
-        double movieRating = movie.getRating();
-
-        if (movieRating > 6) {
-            viewHolder.view.setBackgroundColor(Color.GREEN);
+            Glide.with(viewHolder.itemView.getContext()).load(movie.getPosterUrl()).into(
+                    ivPoster);
         }
-
-        String ratingText = String.format(resources.getString(R.string.rating), movieRating);
-        viewHolder.tvRating.setText(ratingText);
-
-        Glide.with(viewHolder.ivPoster.getContext()).load(movie.getPosterUrl()).into(
-                viewHolder.ivPoster);
-
     }
+
 }
