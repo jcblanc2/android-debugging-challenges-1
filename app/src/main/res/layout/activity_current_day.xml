@@ -27,6 +27,6 @@
         android:layout_below="@+id/textView"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"
-        android:text="22"
-        android:textSize="26sp" />
+        android:textSize="26sp"
+        tools:text="22"/>
 </RelativeLayout>
